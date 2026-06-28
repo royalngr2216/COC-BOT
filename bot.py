@@ -52,11 +52,22 @@ async def handle_health(request: web.Request) -> web.Response:
 async def handle_root(request: web.Request) -> web.Response:
     return web.Response(text="🏰 CoC Bot is running!", content_type="text/plain")
 
+async def handle_ip(request: web.Request) -> web.Response:
+    """Returns the bot's outbound public IP — used to whitelist in CoC API portal."""
+    try:
+        async with aiohttp.ClientSession() as s:
+            async with s.get("https://api.ipify.org", timeout=aiohttp.ClientTimeout(total=5)) as r:
+                ip = await r.text()
+        return web.Response(text=f"Outbound IP: {ip.strip()}\nAdd this to your CoC API key whitelist at developer.clashofclans.com", content_type="text/plain")
+    except Exception as e:
+        return web.Response(text=f"Could not fetch IP: {e}", status=500, content_type="text/plain")
+
 async def start_web_server(bot: "CoCBot"):
     app = web.Application()
     app["bot"] = bot
     app.router.add_get("/",       handle_root)
     app.router.add_get("/health", handle_health)
+    app.router.add_get("/ip",     handle_ip)
 
     port = int(os.getenv("PORT", 10000))
     runner = web.AppRunner(app)
@@ -154,3 +165,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+  
