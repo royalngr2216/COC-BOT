@@ -14,6 +14,24 @@ import motor.motor_asyncio
 
 log = logging.getLogger("db")
 
+# Mirrors the SQLite DEFAULT values — ensures every key is always present
+# in the dict returned by get_config(), even if it was never explicitly set.
+_CONFIG_DEFAULTS: Dict[str, Any] = {
+    "clan_tag":         None,
+    "guild_id":         None,
+    "village_channel":  None,
+    "war_channel":      None,
+    "logs_channel":     None,
+    "reminder_channel": None,
+    "tracker_channel":  None,
+    "scan_interval":    30,
+    "dm_notifications": 1,
+    "village_updates":  1,
+    "war_reminders":    1,
+    "milestone_notifs": 1,
+    "setup_complete":   0,
+}
+
 
 def _clean(doc: Optional[dict]) -> Optional[dict]:
     """Strip MongoDB's internal _id field before returning a document."""
@@ -63,7 +81,9 @@ class Database:
         if doc is None:
             return None
         doc.pop("_id", None)
-        return doc
+        # Spread defaults first, then overwrite with stored values.
+        # This guarantees every expected key exists even if it was never set.
+        return {**_CONFIG_DEFAULTS, **doc}
 
     async def set_config(self, **kwargs):
         await self._db.clan_config.update_one(
