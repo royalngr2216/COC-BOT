@@ -148,6 +148,7 @@ async def main():
         sys.exit(1)
 
     async with bot:
+        await start_web_server(bot)   # ← was missing; Render needs this HTTP server
         await bot.start(token)
 
 

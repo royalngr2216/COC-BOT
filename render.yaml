@@ -1,5 +1,5 @@
 services:
-  - type: worker
+  - type: web
     name: coc-discord-bot
     runtime: python
     buildCommand: pip install -r requirements.txt
@@ -11,7 +11,5 @@ services:
         sync: false
       - key: DISCORD_GUILD_ID
         sync: false
-    disk:
-      name: bot-data
-      mountPath: /opt/render/project/src
-      sizeGB: 1
+      - key: MONGODB_URI
+        sync: false
