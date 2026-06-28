@@ -143,7 +143,7 @@ class CoCBot(commands.Bot):
         await self.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.watching,
-                name="the Clash of Clans village 🏰",
+                name="The Niflheim Clan 🏰",
             )
         )
 
