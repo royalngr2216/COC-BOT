@@ -1,0 +1,17 @@
+services:
+  - type: worker
+    name: coc-discord-bot
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python bot.py
+    envVars:
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: COC_API_KEY
+        sync: false
+      - key: DISCORD_GUILD_ID
+        sync: false
+    disk:
+      name: bot-data
+      mountPath: /opt/render/project/src
+      sizeGB: 1
