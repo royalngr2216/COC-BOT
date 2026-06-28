@@ -74,13 +74,11 @@ class SetupCog(commands.Cog, name="Setup"):
     @app_commands.command(name="link", description="Link your Discord account to your CoC player tag")
     @app_commands.describe(
         player_tag="Your player tag (e.g. #ABCDEF)",
-        api_token="Your in-game API token (Profile → Settings → More Settings → API Token)",
     )
     async def link(
         self,
         interaction: discord.Interaction,
         player_tag: str,
-        api_token: str,
     ):
         await interaction.response.defer(ephemeral=True)
 
@@ -112,17 +110,6 @@ class SetupCog(commands.Cog, name="Setup"):
             )
             return
 
-        # Verify token
-        valid = await self.api.verify_player_token(player_tag, api_token)
-        if not valid:
-            await interaction.followup.send(
-                embed=error_embed(
-                    "Invalid API token. Please copy it from:\n"
-                    "**Profile → Settings ⚙️ → More Settings → API Token**"
-                )
-            )
-            return
-
         await self.db.link_player(
             interaction.user.id,
             player_tag.upper(),
@@ -149,10 +136,7 @@ class SetupCog(commands.Cog, name="Setup"):
             )
             return
 
-        await self.db.conn.execute(
-            "DELETE FROM player_links WHERE discord_id=?", (interaction.user.id,)
-        )
-        await self.db.conn.commit()
+        await self.db.unlink_player(interaction.user.id)
         await interaction.followup.send(
             embed=success_embed(
                 f"Account `{link['player_tag']}` has been unlinked.",
@@ -193,3 +177,4 @@ class SetupCog(commands.Cog, name="Setup"):
 
 async def setup(bot):
     await bot.add_cog(SetupCog(bot))
+    
