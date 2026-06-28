@@ -1,13 +1,21 @@
 """
 Clash of Clans Discord Bot — Main Entry Point
 Premium private bot for a single clan.
+
+Render Web Service compatibility:
+  Render's free tier requires an HTTP server to pass health checks.
+  We spin up a tiny aiohttp server on PORT (default 10000) alongside
+  the Discord bot so Render marks the service as healthy.
 """
 
 import asyncio
 import logging
 import os
 import sys
+from datetime import datetime, timezone
 
+import aiohttp
+from aiohttp import web
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -27,6 +35,35 @@ logging.basicConfig(
     ],
 )
 log = logging.getLogger("bot")
+
+# ── HTTP health-check server (keeps Render Web Service alive) ─────────────────
+_start_time = datetime.now(timezone.utc)
+
+async def handle_health(request: web.Request) -> web.Response:
+    uptime = (datetime.now(timezone.utc) - _start_time).seconds
+    bot: CoCBot = request.app["bot"]
+    status = "online" if bot.is_ready() else "starting"
+    return web.json_response({
+        "status": status,
+        "bot": str(bot.user) if bot.user else None,
+        "uptime_seconds": uptime,
+    })
+
+async def handle_root(request: web.Request) -> web.Response:
+    return web.Response(text="🏰 CoC Bot is running!", content_type="text/plain")
+
+async def start_web_server(bot: "CoCBot"):
+    app = web.Application()
+    app["bot"] = bot
+    app.router.add_get("/",       handle_root)
+    app.router.add_get("/health", handle_health)
+
+    port = int(os.getenv("PORT", 10000))
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    log.info(f"Health-check server listening on port {port}")
 
 
 # ── Bot Setup ─────────────────────────────────────────────────────────────────
