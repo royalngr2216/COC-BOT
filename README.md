@@ -12,8 +12,9 @@ A premium, private Discord bot for **one Clash of Clans clan**. Built with Pytho
 | **Village Completion** | Per-category progress bars, tabbed navigation via dropdown |
 | **Clan Leaderboard** | All members ranked by village completion % |
 | **Monthly Progress** | Track who improved the most since the start of the month |
-| **War System** | Current war overview, attack log, missing attacks |
+| **War System** | Current war overview, attack log, missing attacks, live Pillow scoreboard image |
 | **War Reminders** | Auto-pings at 6h / 2h / 30m with @mentions |
+| **Clan War League (CWL)** | Group overview, round-by-round opponent breakdown (their TH comp, stars, destruction), missing attacks per round, full group standings — all with a generated scoreboard image |
 | **Member Profile** | TH, heroes, war stats, donations — tabbed card |
 | **Clan Dashboard** | Level, war record, capital, members overview |
 | **Donations** | Donated / Received / Ratio leaderboards |
@@ -116,9 +117,10 @@ python bot.py
 ### War
 | Command | Description |
 |---|---|
-| `/war` | Current war with tabs |
+| `/war` | Current war with tabs + scoreboard image |
 | `/warhistory` | Last 10 wars |
 | `/warstats` | A player's war record |
+| `/cwl` | CWL group overview, per-round opponent breakdown, live standings |
 
 ### Activities
 | Command | Description |
@@ -153,6 +155,7 @@ coc-bot/
 ├── utils/
 │   ├── coc_api.py          CoC API wrapper with caching + rate limiting
 │   ├── embeds.py           Premium embed factory, color palette, progress bars
+│   ├── images.py           Pillow scoreboard/banner + CWL standings renderer
 │   ├── completion.py       Village completion calculator + snapshot diffing
 │   └── pagination.py       Button-based embed paginator
 └── cogs/
@@ -162,6 +165,7 @@ coc-bot/
     ├── clan.py             /clan
     ├── leaderboard.py      /leaderboard /monthlyranks
     ├── war.py              /war /warhistory /warstats + auto reminders
+    ├── cwl.py              /cwl — group, rounds, opponents, standings
     ├── donations.py        /donations
     ├── capital.py          /capital
     ├── games.py            /clangames

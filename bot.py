@@ -110,6 +110,7 @@ class CoCBot(commands.Bot):
             "cogs.profile",
             "cogs.village",
             "cogs.war",
+            "cogs.cwl",
             "cogs.clan",
             "cogs.donations",
             "cogs.capital",

@@ -17,6 +17,7 @@ from utils.embeds import (
 )
 from utils.coc_api import CoCAPIError
 from utils.pagination import send_paginated
+from utils import images as img
 
 log = logging.getLogger("war")
 
@@ -153,6 +154,7 @@ class WarTabsView(discord.ui.View):
             embed.add_field(name="📊 Status", value="🟡 **Tied**", inline=False)
 
         embed.set_footer(text="Use the dropdown below to see attack log & missing attacks")
+        embed.set_image(url="attachment://war_banner.png")
         return embed
 
     def _attacks(self) -> discord.Embed:
@@ -267,7 +269,38 @@ class WarCog(commands.Cog, name="War"):
 
         view = WarTabsView(war, interaction.user.id)
         embed = view._overview()
-        await interaction.followup.send(embed=embed, view=view)
+
+        us = war.get("clan", {})
+        them = war.get("opponent", {})
+        state_label = {
+            "preparation": "Prep Day", "inWar": "Battle Day", "warEnded": "War Ended",
+        }.get(war.get("state"), war.get("state", "War"))
+        try:
+            session = await self.api.get_session()
+            buf = await img.render_matchup_banner(
+                session,
+                left_name=us.get("name", "Us"),
+                left_badge_url=us.get("badgeUrls", {}).get("medium"),
+                left_stars=us.get("stars", 0),
+                left_destruction=us.get("destructionPercentage", 0),
+                left_attacks_used=us.get("attacks", 0),
+                left_th_counts=img.th_counts_from_members(us.get("members", [])),
+                right_name=them.get("name", "Them"),
+                right_badge_url=them.get("badgeUrls", {}).get("medium"),
+                right_stars=them.get("stars", 0),
+                right_destruction=them.get("destructionPercentage", 0),
+                right_attacks_used=them.get("attacks", 0),
+                right_th_counts=img.th_counts_from_members(them.get("members", [])),
+                team_size=war.get("teamSize", 0),
+                state_label=state_label,
+                subtitle="Clan War",
+            )
+            file = discord.File(buf, filename="war_banner.png")
+            await interaction.followup.send(embed=embed, view=view, file=file)
+        except Exception:
+            log.exception("Failed to render war banner image")
+            embed.set_image(url=None)
+            await interaction.followup.send(embed=embed, view=view)
 
     # ── /warhistory ───────────────────────────────────────────────────────────
     @app_commands.command(name="warhistory", description="View recent war history")

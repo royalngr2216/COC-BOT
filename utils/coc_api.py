@@ -109,6 +109,18 @@ class CoCAPI:
         except CoCAPIError:
             return {}
 
+    # ── CWL (Clan War League) ────────────────────────────────────────────────
+
+    async def get_cwl_group(self, clan_tag: str) -> dict:
+        """Alias of get_war_league — the CWL group/season object with
+        `state`, `season`, `clans`, and `rounds` (each a list of `warTags`)."""
+        return await self.get_war_league(clan_tag)
+
+    async def get_cwl_war(self, war_tag: str) -> dict:
+        """Fetch a single CWL war by its warTag (e.g. '#2ABC123')."""
+        tag = war_tag.replace("#", "%23")
+        return await self._get(f"/clanwarleagues/wars/{tag}", ttl=45)
+
     async def get_clan_games(self, clan_tag: str) -> dict:
         # Clan games are part of clan info
         return await self.get_clan(clan_tag)
@@ -132,6 +144,10 @@ class CoCAPI:
                 data = await resp.json()
                 return data.get("status") == "ok"
             return False
+
+    async def get_session(self) -> aiohttp.ClientSession:
+        """Expose the underlying aiohttp session for reuse (e.g. Pillow badge fetches)."""
+        return await self._get_session()
 
     async def invalidate_cache(self, path: str):
         url = f"{BASE_URL}{path}"
